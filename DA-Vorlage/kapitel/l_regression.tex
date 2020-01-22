@@ -1,1 +1,41 @@
 \chapter{Logistische Regression}
+Dieses Kapitel befasst sich mit der Logistischen Regression. Zunächst wird die Definition und Funktion der Logistischen Regression erklärt. Danach wird die Geschichte und Entwicklung der Methode erörtert. Des weiteren gibt es eine Vertiefung der verschiedenen Regularisierungsmethoden und zum Abschluss die Grenzen der Funktion sowie einen Ausblick auf verwandte Algorithmen.
+\section{Definition und Funktion}
+Die logistische Regression ist ein statistisches Analyseverfahren, bei dem es darum geht, eine Beziehung zwischen einer abhängigen und mehrerer unabhängiger Variablen zu modellieren und wird auch als als binäres Logit-Modell bezeichnet.
+Sie unterscheidet sich in soweit von der linearen Regression, dass die Voraussagen nicht spezielle Werte, sondern die Wahrscheinlichkeiten angeben, mit denen die jeweilige Ausprägung der Variable angenommen wird.\cite{ROHR} Die beiden Ausprägungen der abhängigen Variablen wird mit 0 bzw. 1 beschrieben, sodass die Vorhersage des Modells die Wahrscheinlichkeit beschreibt, mit der die abhängige Variable den Wert 1 annimmt, formal $P(Y_i=1)$ . Die Logistische Regression gehört zur Klasse der strukturen-prüfenden Verfahren und bildet eine Variation der Regressionsanalyse. Sie grenzt sich durch die Art ihrer abhängigen Variable, bezeichnet mit Y, welche als kategoriale Variable klassifiziert ist, von anderen Regressionsanalysen ab. Die Ausprägungen der Variable repräsentieren die verschiedenen Alternativen, in unserem binären (oder auch dichotomen) Fall ist "`trifft zu"' und "`trifft nicht zu"'.\cite{BECK}
+Diese Gruppen werden nun mit 0 und 1 bezeichnet und für die Y Variable gilt nun: 
+\begin{displaymath}
+P(Y=0)=1-P(Y=1)\text{ und } P(Y=1)=1-P(Y=0)
+\end{displaymath}
+Ausdrücken lässt sich das logistische Regressionsmodell nun wie folgt:
+\begin{displaymath}
+\pi(x) = f(x_{i},..,x_{i})
+\end{displaymath}
+Wobei $\pi(x)=P(Y=1|x)$ die bedingte Wahrscheinlichkeit, unter der das Ereignis 1 ("`trift zu"') mit den gegebenen Werten $x = (x_{1},...,x_{i})^{T}$ eintritt, angibt.\\\\
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.70]{bilder/logistic_reg_func}
+\caption{Die logistische Funktion $p=\dfrac{1}{1+e^{-x}}$ }
+\end{figure}
+Ziele der logistischen Regression ist es, gegeben Trainingsdaten 
+$D = \{(x_1, y_1), \dots, (x_N,y_N)\}$ mit $x_i \in \mathbb R^d$ und $y_i \in 
+\{0,1\}$ , ein Modell $f_{\beta}(x)$ für Vorhersagen finden, 
+welches auf neuen, ungesehenen Daten einen möglichst kleinen Fehler macht.
+\\
+Das binomiale logistische Regressionsmodell ist wie folgt beschrieben:
+\begin{displaymath}
+P(Y=1 | X=x_i)=P(Y_i=1)=\frac{\exp(\beta_0+x_i^T\beta)}{1+\exp(\beta_0+x_i^T\beta)} = \frac{1}{1+\exp(-(\beta_0+x_i^T\beta))}
+\end{displaymath}
+$\beta$ stellt hier den Vektor der Koeffizienten $(\beta_1 ,..., \beta_n)^T$ dar und $\beta_0$ ist der Bias. \\
+Die Anpassung der Koeffizienten erfolgt durch Minimierung der Loss Funktion: \begin{displaymath}
+\min_\beta \sum_{i}^N \log(1+\exp(-(\beta_0+x_i^T\beta))) +C*R(\beta)
+\end{displaymath}
+Wobei $C \in \mathbb R$ ein Hyperparameter ist,der fest gewählt werden muss. Dies geschieht zumeist durch das Testen verschiedener Werte, sodass hier ein Ansatz zur Parallelisierung entsteht.
+\section{Geschichte und Entwicklung}
+\section{Regularisierungsmethoden}
+\subsection{LASSO}
+L1-Regularisierung (Least Absolute Shrinkage and Selection Operator, kurz \textbf{LASSO}) mit $R(\beta) = \sum_{i}^N|\beta_i|$
+\subsection{Ridge Regression}
+L2-Regularisierung (Ridge Regression) mit $R(\beta)= \sum_{i}^N \beta_i^2$.
+\section{Grenzen}
+\section{Verwandte Algorithmen}

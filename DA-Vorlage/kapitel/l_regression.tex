@@ -7,35 +7,49 @@ Diese Gruppen werden nun mit 0 und 1 bezeichnet und für die Y Variable gilt nun
 \begin{displaymath}
 P(Y=0)=1-P(Y=1)\text{ und } P(Y=1)=1-P(Y=0)
 \end{displaymath}
-Ausdrücken lässt sich das logistische Regressionsmodell nun wie folgt:
-\begin{displaymath}
-\pi(x) = f(x_{i},..,x_{i})
-\end{displaymath}
-Wobei $\pi(x)=P(Y=1|x)$ die bedingte Wahrscheinlichkeit, unter der das Ereignis 1 ("`trift zu"') mit den gegebenen Werten $x = (x_{1},...,x_{i})^{T}$ eintritt, angibt.\\\\
-\begin{figure}[ht]
-\centering
-\includegraphics[scale=0.70]{bilder/logistic_reg_func}
-\caption{Die logistische Funktion $p=\dfrac{1}{1+e^{-x}}$ }
-\end{figure}
-Ziele der logistischen Regression ist es, gegeben Trainingsdaten 
-$D = \{(x_1, y_1), \dots, (x_N,y_N)\}$ mit $x_i \in \mathbb R^d$ und $y_i \in 
+Ziel der Logistischen Regression ist es, gegeben Trainingsdaten 
+$D = \{(X_1, y_1), \dots, (X_N,y_N)\}$ mit $X_i \in \mathbb R^d$ und $y_i \in 
 \{0,1\}$ , ein Modell $f_{\beta}(x)$ für Vorhersagen finden, 
 welches auf neuen, ungesehenen Daten einen möglichst kleinen Fehler macht.
-\\
-Das binomiale logistische Regressionsmodell ist wie folgt beschrieben:
+Ausdrücken lässt sich das logistische Regressionsmodell nun wie folgt:
+\begin{displaymath}
+\pi(x) = f_{\beta}(x_{1},..,x_{n})
+\end{displaymath}
+Wobei $\pi(X_i)=P(Y=1|X_i)$ die bedingte Wahrscheinlichkeit, unter der das Ereignis 1 ("`trift zu"') mit den gegebenen Werten $X_i = (x_{i1},...,x_{id})^{T}$ eintritt, angibt.\\
+Wie auch bei der Linearen Regression werden hierbei die unabhängigen Variablen linear miteinander kombiniert. Die sogenannte systematische Komponente des Modells wird durch die Linearkombination
+\begin{displaymath}
+z(X_i)=\beta_0 + \sum_{j=1}^{d}{\beta_j * x_{ij}} + u_i
+\end{displaymath}
+beschrieben. $\beta$ stellt hier den Vektor der Koeffizienten $(\beta_1 ,..., \beta_d)^T$ dar und $\beta_0$ ist der Bias. $u_i$ ist ein zu vernachlässigender Störterm.\cite{ROHR}
+Um das Modell auszugestalten wird hier die logistische Funktion 
+\begin{displaymath}
+p=\dfrac{\exp(x)}{1+\exp(x)}=\dfrac{1}{1+\exp(-x)}
+\end{displaymath}
+verwendet.\cite{BECK}
+In Abbildung 3.1 sieht man den s-förmigen Verlauf der Funktion. Dieser Verlauf, als Verteilungsfunktion interpretiert, approximiert die Verteilungsfunktion der Normalverteilung mit ausreichender Genauigkeit. Somit kann sie verwendet werden um reellwertige Variablen (im Wertebereich $[-\infty, +\infty]$) auf eine Wahrscheinlichkeit (im Wertebereich $[0,1]$) zu transformieren, denn die Verteilungsfunktion der Normalverteilung ist nur als Integral auszudrücken und damit schwer zu berechnen.\cite{WIKI}\cite{BECK}
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.65]{bilder/logistic_reg_func}
+\caption{Die logistische Funktion $p=\dfrac{1}{1+\exp(-x)}$ }
+\end{figure}
+\newpage
+Wenn man diese Transformation der systematischen Komponente nun mit der logistischen Funktion durchführt erhält man die logistische Regressionsfunktion:
+\begin{displaymath}
+\pi(X)= \dfrac{1}{1+\exp(z(X))}
+\end{displaymath}
+Also genauer:
 \begin{displaymath}
 P(Y=1 | X=x_i)=P(Y_i=1)=\frac{\exp(\beta_0+x_i^T\beta)}{1+\exp(\beta_0+x_i^T\beta)} = \frac{1}{1+\exp(-(\beta_0+x_i^T\beta))}
 \end{displaymath}
-$\beta$ stellt hier den Vektor der Koeffizienten $(\beta_1 ,..., \beta_n)^T$ dar und $\beta_0$ ist der Bias. \\
+Die systemische Komponente $z(X)=\beta_0 + x_i^T\beta$ ist ein Prädiktor für $\pi(X)$. Je größer $z(X)$, desto größer auch $\pi(X)$ und damit auch $P(Y=1|X)$.\cite{BECK} 
+\section{Lernen mit Logistischer Regression}
 Die Anpassung der Koeffizienten erfolgt durch Minimierung der Loss Funktion: \begin{displaymath}
 \min_\beta \sum_{i}^N \log(1+\exp(-(\beta_0+x_i^T\beta))) +C*R(\beta)
 \end{displaymath}
 Wobei $C \in \mathbb R$ ein Hyperparameter ist,der fest gewählt werden muss. Dies geschieht zumeist durch das Testen verschiedener Werte, sodass hier ein Ansatz zur Parallelisierung entsteht.
-\section{Geschichte und Entwicklung}
 \section{Regularisierungsmethoden}
 \subsection{LASSO}
 L1-Regularisierung (Least Absolute Shrinkage and Selection Operator, kurz \textbf{LASSO}) mit $R(\beta) = \sum_{i}^N|\beta_i|$
 \subsection{Ridge Regression}
 L2-Regularisierung (Ridge Regression) mit $R(\beta)= \sum_{i}^N \beta_i^2$.
-\section{Grenzen}
 \section{Verwandte Algorithmen}

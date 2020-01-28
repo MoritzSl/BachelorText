@@ -43,10 +43,24 @@ P(Y=1 | X=x_i)=P(Y_i=1)=\frac{\exp(\beta_0+x_i^T\beta)}{1+\exp(\beta_0+x_i^T\bet
 \end{displaymath}
 Die systemische Komponente $z(X)=\beta_0 + x_i^T\beta$ ist ein Prädiktor für $\pi(X)$. Je größer $z(X)$, desto größer auch $\pi(X)$ und damit auch $P(Y=1|X)$.\cite{BECK} 
 \section{Lernen mit Logistischer Regression}
+Da das logistische Regressionsmodell dazu verwendet werden soll anhand gelernter Trainingsdaten Voraussagen für weitere, unbekannte Daten zu berechnen, ist es notwendig alle unbekannten Variablen entsprechend dem vorliegenden Datensatz anzupassen.
+Um mit dem Modell möglichst korrekte Voraussagen treffen zu können müssen hierfür der Vektor der Koeffizienten $\beta$ und der Bias $\beta_0$ geschickt gewählt werden. Die Koeffizienten geben dabei die Bedeutsamkeit der einzelnen Ausprägungen der Variablen $X$ an, je größer $|\beta_i|, i \in 1..d$ desto größer sind auch die Auswirkungen der jeweiligen Ausprägung auf die Entscheidung.\cite{FS}
+In der linearen Regression wird hierfür häufig die "`Methode der kleinsten Quadrate"' 
+\begin{displaymath}
+\sum_{i=1}^N(\pi(X_i)-y_i)^2
+\end{displaymath}
+gewählt. Es werden die Werte für $\beta$ gewählt, welche möglichst kleine quadrierte Fehler machen. Somit ergibt sich die Minimierungsfunktion: 
+\begin{displaymath}
+\min_\beta \sum_{i_1}^N (\pi(X_i)-y_i)^2
+\end{displaymath}
+Unter den üblichen Annahmen der linearen Regression ist die "`Summe der kleinsten Quadrate"' eine gute Schätzfunktion mit brauchbaren statistischen Eigenschaften.\cite{WIL}
+Unter den Annahmen der logistischen Regression verliert diese Methode jedoch diese Eigenschaften. Die am häufigsten gewählte Methode die "`Summe der kleinsten Quadrate"' zu berechnen ist, unter Annahme dass die Fehlerterme normalverteilt sind, die Maximum Likelihood. Diese passt die unbekannten Variablen so an, dass die Chance, mit ihnen die gegebenen Daten darzustellen maximiert wird. Dies bildet auch die Grundlage zur Findung der unbekannten Variablen der logistischen Regression. Um diese Variablen bestimmen zu können bedarf es einer Funktion, der sogenannten Maximum Likeliehood Funktion. Sie drückt die Wahrscheinlichkeit aus in wie weit die gegebenen Daten die Variablen als Funktion darstellen. Die Maximum Likelihood Schätzer der Parameter sind dabei die Werte welche diese Funktion maximieren.\cite{WIL}
+
 Die Anpassung der Koeffizienten erfolgt durch Minimierung der Loss Funktion: \begin{displaymath}
 \min_\beta \sum_{i}^N \log(1+\exp(-(\beta_0+x_i^T\beta))) +C*R(\beta)
 \end{displaymath}
 Wobei $C \in \mathbb R$ ein Hyperparameter ist,der fest gewählt werden muss. Dies geschieht zumeist durch das Testen verschiedener Werte, sodass hier ein Ansatz zur Parallelisierung entsteht.
+\section{Stochastic Gradient Descent}
 \section{Regularisierungsmethoden}
 \subsection{LASSO}
 L1-Regularisierung (Least Absolute Shrinkage and Selection Operator, kurz \textbf{LASSO}) mit $R(\beta) = \sum_{i}^N|\beta_i|$

@@ -27,6 +27,33 @@
 % Algorithmen
 \usepackage[plain,chapter]{algorithm}
 \usepackage{algorithmic}
+\usepackage{listings}
+\lstset{language=C++}
+\lstdefinestyle{customc}{
+  belowcaptionskip=1\baselineskip,
+  breaklines=true,
+  frame=single,
+  xleftmargin=\parindent,
+  language=C++,
+  showstringspaces=false,
+  basicstyle=\footnotesize\ttfamily,
+  keywordstyle=\bfseries\color{green!40!black},
+  commentstyle=\itshape\color{white!40!black},
+  identifierstyle=\color{blue},
+  stringstyle=\color{purple!60!black},
+  morekeywords={DATA_TYPE},
+}
+\lstset{escapechar=@,
+	style=customc,
+	emph={pragma,HLS,LOOP,FLATTEN},
+  	emphstyle={\color{purple!60!black}},
+  	emph={[2]f},
+  	emphstyle={[2]\color{black}},
+  	emph={[3]FEATURE_COUNT,BATCH_SIZE},
+  	emphstyle={[3]\bfseries\color{orange!60!black}},
+  	emph={[4]predict,learn},
+  	emphstyle={[4]\bf\color{black}}
+}
 
 \usepackage{enumerate}
 

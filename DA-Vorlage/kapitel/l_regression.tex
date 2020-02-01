@@ -18,10 +18,10 @@ Ausdrücken lässt sich das logistische Regressionsmodell nun wie folgt:
 Wobei $\pi(\vec x_i)=P(Y=1|\vec x_i)$ die bedingte Wahrscheinlichkeit, unter der das Ereignis 1 ("`trifft zu"') mit den gegebenen Werten $\vec x_i = (x_{i1},...,x_{id})^{T}$ eintritt, angibt.\\
 Wie auch bei der Linearen Regression werden hierbei die unabhängigen Variablen linear miteinander kombiniert. Die sogenannte systematische Komponente des Modells wird durch die Linearkombination
 \begin{displaymath}
-z(\vec x_i)=\beta_0 + \sum_{j=1}^{d}{\beta_j \cdot x_{ij}} + u_i
+z(\vec x_i)=\beta_0 + \sum_{j=1}^{d}{\beta_j \cdot x_{ij}} + r_i
 \end{displaymath}
-beschrieben. $\beta$ stellt hier den Vektor der Koeffizienten $(\beta_1 ,..., \beta_d)^T$ dar und $\beta_0$ ist der Bias. $u_i$ ist ein zu vernachlässigender Störterm.\cite{ROHR}
-Um das Modell auszugestalten wird hier die logistische Funktion 
+beschrieben. $\beta$ stellt hier den Vektor der Koeffizienten $(\beta_1 ,..., \beta_d)^T$ dar und $\beta_0$ ist der Bias. $r_i$ ist ein zu vernachlässigender Störterm, der durch die spätere Ableitung in Abschnitt 3.2.2 wegfällt \cite{ROHR}.
+Um das Modell der logistischen Regression zu benutzen wird hier, wie der Name bereits sagt, die logistische Funktion 
 \begin{displaymath}
 p=\dfrac{\exp(x)}{1+\exp(x)}=\dfrac{1}{1+\exp(-x)}
 \end{displaymath}
@@ -32,13 +32,14 @@ In Abbildung 3.1 sieht man den s-förmigen Verlauf der Funktion. Dieser Verlauf,
 \includegraphics[scale=0.75]{bilder/logistic_reg_func}
 \caption{Die logistische Funktion $p=\dfrac{1}{1+\exp(-x)}$ }
 \end{figure}\\
-Aufgrund der binären Art der Zielwerte ist es erstrebenswert dass die Ausgabewerte der Regressionsfunktion gegen 0 beziehungsweise 1 konvergieren. Optimal wäre also ein Funktionsverlauf von $f_\beta(\vec x_i)$ der dem Verlauf der Vorzeichenfunktion möglichst ähnlich ist (Siehe Abbildung 3.2). Die $\sign(z(\vec x_i))$ selbst ist für die logistische Regression allerdings ungeeignet, da sie nicht stetig und damit nicht differenzierbar ist. Die Differenzierbarkeit ist jedoch eine Voraussetzung für die Optimierung der Funktion, was im nachfolgendem Abschnitt 3.2.1 näher erörtert wird.
+Aufgrund der binären Art der Zielwerte ist es erstrebenswert dass die Ausgabewerte der Regressionsfunktion gegen 0 beziehungsweise 1 konvergieren. Optimal wäre also ein Funktionsverlauf von $f_\beta(\vec x_i)$ der dem Verlauf der Vorzeichenfunktion möglichst ähnlich ist (Siehe Abbildung 3.2), solange diese auf einen Wertebereich von $[0,1]$ transformiert wäre. Die $\sign(z(\vec x_i))$ selbst ist für die logistische Regression allerdings ungeeignet, da sie nicht stetig und damit nicht differenzierbar ist. Die Differenzierbarkeit ist jedoch eine Voraussetzung für die Optimierung der Funktion, was im nachfolgendem Abschnitt 3.2.2 näher erörtert wird.
+Zusätzlich zu den anderen Vorteilen der logistischen Funktion ist ihre Ähnlichkeit zur Vorzeichenfunktion ein Grund sie für dichotome Entscheidungsprobleme zu verwenden.
 \begin{figure}[ht]
 \centering
 \includegraphics[scale=0.75]{bilder/sign}
 \caption{Die Vorzeichenfunktion $q=\sign(x)$ }
 \end{figure}\\
-Wenn man diese Transformation der systematischen Komponente nun mit der logistischen Funktion durchführt erhält man die logistische Regressionsfunktion:
+Wenn man jetzt also die Transformation der systematischen Komponente mit der logistischen Funktion durchführt erhält man die logistische Regressionsfunktion:
 \begin{displaymath}
 \pi(\vec x_i)= \dfrac{1}{1+\exp(z(\vec x_i))}
 \end{displaymath}
@@ -46,26 +47,41 @@ Also genauer:
 \begin{displaymath}
 P(Y=1 | X=\vec x_i)=P(Y_i=1)=\frac{\exp(\beta_0+\vec x_i^T\beta)}{1+\exp(\beta_0+\vec x_i^T\beta)} = \frac{1}{1+\exp(-(\beta_0+\vec x_i^T\beta))}
 \end{displaymath}
-Die systemische Komponente $z(\vec x_i)=\beta_0 + \vec x_i^T\beta$ ist ein Prädiktor für $\pi(\vec x_i)$. Je größer $z(\vec x_i)$, desto größer auch $\pi(\vec x_i)$ und damit auch $P(Y=1|\vec x_i)$ \cite{BECK}.
+Die systemische Komponente $z(\vec x_i)=\beta_0 + \vec x_i^T\beta$ ist ein Prädiktor für $\pi(\vec x_i)$. Je größer $z(\vec x_i)$, desto größer auch $\pi(\vec x_i)$ und damit auch $P(Y=1|\vec x_i)$ \cite{BECK}.\newpage
 \section{Lernen mit Logistischer Regression}
+\subsection{Kostenfunktion und Maximum Likelihood}
 Da das logistische Regressionsmodell dazu verwendet werden soll anhand gelernter Trainingsdaten Voraussagen für weitere, unbekannte Daten zu berechnen, ist es notwendig alle unbekannten Variablen entsprechend dem vorliegenden Datensatz anzupassen.
 Um mit dem Modell möglichst korrekte Voraussagen treffen zu können müssen hierfür der Vektor der Koeffizienten $\beta$ und der Bias $\beta_0$ geschickt gewählt werden. Die Koeffizienten geben dabei die Bedeutsamkeit der einzelnen Ausprägungen der Variablen $X$ an, je größer $|\beta_i|, i \in 1..d$ desto größer sind auch die Auswirkungen der jeweiligen Ausprägung auf die Entscheidung \cite{FS}.
 In der linearen Regression wird hierfür häufig die "`Methode der kleinsten Quadrate"' 
 \begin{displaymath}
-\sum_{i=1}^N(\pi(\vec x_i)-y_i)^2
+\sum_{i=1}^n(\pi(\vec x_i)-y_i)^2
 \end{displaymath}
 gewählt. Es werden die Werte für $\beta$ gewählt, welche möglichst kleine quadrierte Fehler machen. Somit ergibt sich die Minimierungsfunktion: 
 \begin{displaymath}
-\min_\beta \sum_{i_1}^N (\pi(\vec x_i)-y_i)^2
+\min_\beta \sum_{i_1}^n (\pi(\vec x_i)-y_i)^2
 \end{displaymath}
 Unter den üblichen Annahmen der linearen Regression ist die "`Summe der kleinsten Quadrate"' eine gute Schätzfunktion mit brauchbaren statistischen Eigenschaften \cite{WIL}.
 Unter den Annahmen der logistischen Regression verliert diese Methode jedoch diese Eigenschaften. Die am häufigsten gewählte Methode die "`Summe der kleinsten Quadrate"' zu berechnen ist, unter Annahme dass die Fehlerterme normalverteilt sind, die Maximum Likelihood. Diese passt die unbekannten Variablen so an, dass die Chance, mit ihnen die gegebenen Daten darzustellen maximiert wird. Dies bildet auch die Grundlage zur Findung der unbekannten Variablen der logistischen Regression. Um diese Variablen bestimmen zu können bedarf es einer Funktion, der sogenannten Maximum Likeliehood Funktion. Sie drückt die Wahrscheinlichkeit aus in wie weit die gegebenen Daten die Variablen als Funktion darstellen. Die Maximum Likelihood Schätzer der Parameter sind dabei die Werte welche diese Funktion maximieren \cite{WIL}.
-
+Aus der Maximum Likelihood Funktion ergeben sich zwei Kostenfunktionen, eine für den Fall $y_i =1$ und eine für den Fall $y_i=0$.
+\begin{displaymath}
+cost(\pi(\vec x_i), y_i)= \begin{cases}
+-\log(\pi(\vec x_i)) & \text{wenn } y_i=1\\
+-\log(1-\pi(\vec x_i)) & \text{wenn } y_i=0
+\end{cases}
+\end{displaymath}
+Da $y_i$ immer entweder 0 oder 1 ist, kann man die Kostenfunktionen auch wie folgt zusammenfassen:
+\begin{displaymath}
+cost(\pi (\vec x_i), y_i) = y_i \cdot -\log(\pi(\vec x_i)) + (1-y_i) \cdot -\log(1-\pi(\vec x_i))
+\end{displaymath}
+Die Kostenfunktion über alle Eingaben lautet damit \cite{HER}:
+\begin{displaymath}
+J(\beta)=\dfrac{1}{n} \cdot \sum_{i=1}^n cost(\pi(\vec x_i), y_i) = \dfrac{1}{n} \cdot \sum_{i=1}^n y_i \cdot -\log(\pi(\vec x_i)) + (1-y_i) \cdot -\log(1-\pi(\vec x_i))
+\end{displaymath}
 \subsection{Gradientenabstiegsverfahren}
 Das Gradientenabstiegsverfahren (Stochastic Gradient Descent, kurz SGD) ist ein Lernverfahren für Modelle mit nichtlinearen Parametern im Modellausgang. Es wird in statischen neuronalen Netzen dafür verwendet mittels eines Algorithmus' die Koeffizienten zu adaptieren. Ziel des Lernverfahrens ist es die Koeffizienten so anzupassen, dass die Abweichung  zwischen dem $y_i$ Wert der eingegebenen Variable und der Ausgabe $\pi(\vec x_i)$ möglichst gering ist. Diese Abweichung bezeichnet man als Ausgangsfehler \cite{IV}:
 \begin{displaymath}
 e_{\beta}(\vec x_i , y_i)=y_i-\pi(\vec x_i)
-\end{displaymath}\newpage
+\end{displaymath}
 Dieses Optimierungsproblem lässt sich wie folgt iterativ approximieren:
 \begin{figure}[ht]
 \centering
@@ -124,10 +140,30 @@ Bei dem SGD Verfahren wird als Suchrichtung $s^{(l)}$ der negative Gradient $-g_
 s^{(l)^T} \cdot g_\beta^{(l)} = - \parallel g_\beta^{(l)} \parallel^2 < 0
 \end{displaymath}
 \subsection{Zusammenführen der Funktionen}
-Die Anpassung der Koeffizienten erfolgt durch Minimierung der Loss Funktion: \begin{displaymath}
-\min_\beta \sum_{i}^N \log(1+\exp(-(\beta_0+\vec x_i^T\beta))) +C \cdot R(\beta)
+Das Ziel der logistischen Regression mit SGD ist es, die Kostenfunktion $J(\beta)$ zu minimieren. Aus den Erkenntnissen in Abschnitt 3.2.2 lässt sich entnehmen, dass für die Anpassung der Koeffizienten $\beta^{(l+1)}$ der negative Gradient verwendet wird. Dieser berechnet sich nach 3.2.1 durch die Partielle Ableitung der Kostenfunktion nach $\beta_i$ für alle $\vec x_i, i \in [1,n]$:
+\begin{displaymath}
+\dfrac{\partial}{\partial \beta_i} J(\beta) = - \frac{1}{n} \sum_{i=1}^n (\pi(\vec x_i) - y_i)\cdot \vec x_i
 \end{displaymath}
-Wobei $C \in \mathbb R$ ein Hyperparameter ist,der fest gewählt werden muss. Dies geschieht zumeist durch das Testen verschiedener Werte, sodass hier ein Ansatz zur Parallelisierung entsteht. $R(\beta)$ beschreibt einen Regularisierungsterm, auf den im Kapitel 3.3 näher eingegangen wird.
+beziehungsweise für den direkten Fall $\beta_i$ mit $\vec{x_i}$:
+\begin{displaymath}
+\dfrac{\partial}{\partial \beta_i} cost(\pi(\vec x_i),y_i) = (y_i -\pi(\vec x_i))\cdot \vec x_i
+\end{displaymath}
+Somit werden die Koeffizienten nach mit allen Variablen $\vec x_i, i \in [1,n]$ durch folgenden Term angepasst \cite{HER}:
+\begin{displaymath}
+\beta^{(l+1)} = \beta^{(l)} + \eta^{(l)} \cdot \frac{1}{n} \sum_{i=1}^n (y_i-\pi(\vec x_i)) \cdot \vec x_i
+\end{displaymath}
+Hierbei kann $n$ auch durch eine beliebige Variable $m\text{ . }0< m < n$ ersetzt werden, wodurch eine Batch Anpassung, also eine Anpassung der Koeffizienten nach $m$ Schritten durch das Mittel der Kostenfunktionen entsteht:
+\begin{displaymath}
+\beta^{(l+1)} = \beta^{(l)} + \eta^{(l)} \cdot \frac{1}{m} \sum_{i=l\cdot m + 1}^{(l+1) \cdot m} (y_i-\pi(\vec x_i)) \cdot \vec x_i
+\end{displaymath}
+Für den Durchlauf mit einem Update nach jeder Variable $\vec x_i$ (Batchsize $=1$) gilt \cite{COH}:
+\begin{displaymath}
+\beta^{(l+1)} = \beta^{(l)} + \eta^{(l)} \cdot (y_i-\pi(\vec x_i)) \cdot \vec x_i
+\end{displaymath}
+Die Anpassung der Koeffizienten kann durch die Erweiterung der Kostenfunktion noch weiter verbessert werden, um beispielsweise einer Überanpassung der Koeffizienten entgegenzuwirken: \begin{displaymath}
+\min_\beta \left( \frac{1}{n} \sum_{i=1}^n (y_i - \pi(\vec x_i))\cdot \vec x_i +C \cdot R(\beta)\right) 
+\end{displaymath}
+Wobei $C \in \mathbb R$ ein Hyperparameter zur Gewichtung ist, der fest gewählt werden muss. Dies geschieht zumeist durch das Testen verschiedener Werte, sodass hier ein Ansatz zur Parallelisierung entsteht. $R(\beta)$ beschreibt einen Regularisierungsterm, auf den im Kapitel 3.3 näher eingegangen wird.
 \section{Regularisierungsmethoden}
 \subsection{LASSO}
 L1-Regularisierung (Least Absolute Shrinkage and Selection Operator, kurz \textbf{LASSO}) mit $R(\beta) = \sum_{i}^N|\beta_i|$

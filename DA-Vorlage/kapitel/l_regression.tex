@@ -165,8 +165,48 @@ Die Anpassung der Koeffizienten kann durch die Erweiterung der Kostenfunktion no
 \end{displaymath}
 Wobei $C \in \mathbb R$ ein Hyperparameter zur Gewichtung ist, der fest gewählt werden muss. Dies geschieht zumeist durch das Testen verschiedener Werte, sodass hier ein Ansatz zur Parallelisierung entsteht. $R(\beta)$ beschreibt einen Regularisierungsterm, auf den im Kapitel 3.3 näher eingegangen wird.
 \section{Regularisierungsmethoden}
+Regularisierung ist jede Modifikation die an einem Lernalgorithmus vorgenommen wird um den Generalisierungsfehler, jedoch nicht seinen Trainingsfehler zu reduzieren \cite{GOO}.\\
+Wenn ein Lernalgorithmus mit logistischer Regression mit einem Datensatz trainiert wird, kann dieser auf den gegebenen Daten ausreichend gute Voraussagen treffen \cite{NG}. Es kann jedoch passieren, dass die Häufigkeit von richtigen Voraussagen auf neuen, von dem Algorithmus nicht gelernten Daten drastisch sinken. Man bezeichnet das Modell dann als "`overfitted"' (überangepasst). Das bedeutet, dass der Algorithmus zwar die vorgegebenen Trainingsdaten für Voraussagen gelernt hat, aber von dem gelernten Modell nicht generalisieren kann. Ein Beispiel dafür ist in Abbildung 3.6 und 3.7 zu sehen.
+\begin{figure}[ht]
+\centering
+	\begin{minipage}[b]{.4\linewidth}
+  		\includegraphics[scale=0.4]{bilder/normal}
+  		\caption{Normale Regressionsgrade}
+  	\end{minipage}
+  	\hspace{.1\linewidth}% Abstand zwischen Bilder
+  	\begin{minipage}[b]{.4\linewidth}
+  		\includegraphics[scale=0.4]{bilder/overfitting}
+		\caption{Overfitting des Modells}
+	\end{minipage}
+	
+\end{figure}\\
+Um besagtes Overfitting zu vermeiden können zum einen möglichst repräsentative Trainingsdatensätze gewählt werden, zum anderen kann die Minimierungsfunktion mit einem Regularisierungsterm erweitert werden.
+Die Regularisierung soll zu hoch gewichtete Koeffizienten bestrafen oder nicht die Gewichtung für unwichtige Koeffizienten reduzieren.
+Hierfür werden nachfolgend zwei Methoden vorgestellt.
 \subsection{LASSO}
-L1-Regularisierung (Least Absolute Shrinkage and Selection Operator, kurz \textbf{LASSO}) mit $R(\beta) = \sum_{i}^N|\beta_i|$
+L1-Regularisierung (Least Absolute Shrinkage and Selection Operator, kurz \textbf{LASSO}) ist die l1 Norm der Koeffizienten, definiert als lineare Funktion durch:
+\begin{displaymath}
+R(\beta) = \parallel \beta \parallel_1 = \sum_{i}^n|\beta_i|
+\end{displaymath}
+Man nennt die l1 Norm auch die Manhattan Distanz, also die Distanz die benötigt wird um von einem Punkt zu einem anderen zu gelangen, nur mit Laufrichtungen parallel zu einer der Achsen des Koordinatensystems. L1-Regularisierung ist schwierig zu optimieren, da die Betragsfunktion an der Stelle 0 nicht differenzierbar ist. Eine Regularisierung mit LASSO führt zu einem spärlichen Koeffizientenvektor mit einigen großen und vielen kleinen Gewichten ($=0$), so das wenige Features gewählt werden. Die Verteilung der Gewichte entspricht somit einer Laplace-Verteilung \cite{JUR}. In Abbildung 3.x wird eine Regularisierung mit L1 dargestellt.
 \subsection{Ridge Regression}
-L2-Regularisierung (Ridge Regression) mit $R(\beta)= \sum_{i}^N \beta_i^2$.
-\section{Verwandte Algorithmen}
+
+L2-Regularisierung (Ridge Regression) ist die quadrierte l2 Norm der Koeffizienten, definiert durch:
+\begin{displaymath}
+R(\beta)= \parallel \beta \parallel_2^2= \dfrac{1}{2} \sum_{i}^n \beta_i^2
+\end{displaymath}
+Die Konstante $\frac{1}{2}$ dient hier der einfacheren Berechnung der Ableitung für die Optimierung und wird über die Anpassung von $C$ kompensiert. L2 entspricht der Euklidischen Distanz des Koeffizientenvektors zum Ursprung. Regularisierung mit Ridge Regression führt zu deutlich kleineren Koeffizienten und damit zu weniger überangepassten einzelnen Features. Die Verteilung des Koeffizientenvektors entspricht einer Gauß'schen Verteilung mit Median $\mu = 0$ und Varianz $ 2 \sigma^2 = 1$ \cite{JUR}.
+Sei 
+\begin{displaymath}
+\dfrac{1}{\sqrt{2\pi \sigma_j^2}}\exp\left(-\dfrac{(\beta_j-\mu_j)^2}{2\sigma_j^2}\right)
+\end{displaymath}
+die Gauß-Verteilung des Koeffizienten $\beta_j$. Wenn man nun jeden Koeffizienten mit der Gauß'schen Verteilung der Koeffizienten multipliziert, erhält man folgenden Term:
+\begin{displaymath}
+\tilde{\beta} = \max_{\beta} \prod_{i=1}^n P(y_i | \vec x_i) \cdot \prod_{j=1}^d \dfrac{1}{\sqrt{2\pi \sigma^2}}\exp\left(-\dfrac{(\beta_j-\mu_j)^2}{2\sigma_j^2}\right)
+\end{displaymath}
+Im logarithmischen Raum, mit $\mu =0$ und $2\sigma^2 = 1$ verhält dieser sich gleich dem Term: 
+\begin{displaymath}
+\tilde{\beta} = max_\beta \sum_{i=1}^n logP(y_1 | \vec x_i)-C \cdot \sum_{j=1}^d \beta_j^2
+\end{displaymath}
+Welcher äquivalent zu unserer Minimierungsfunktion aus 3.2.3 ist \cite{JUR}.
+\subsection{Zusammenfassung der Regularisierungsmethoden}

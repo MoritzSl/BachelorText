@@ -212,7 +212,7 @@ Im logarithmischen Raum, mit $\mu =0$ und $2\sigma^2 = 1$ verhält dieser sich g
 Welcher äquivalent zu unserer Minimierungsfunktion aus 3.2.3 ist \cite{JUR}.
 \subsection{Zusammenfassung der Regularisierungsmethoden}
 Sowohl L1- als auch L2 Regularisierung haben beide ihre Vorteile. LASSO ist besonders für Feature Selection geeignet, da da dadurch viele weniger- oder unwichtige Features aussortiert (auf 0 gesetzt) werden. Für Fälle mit vielen, aber wenig relevanten Features ist Fehlklassifizierungsrate deutlich geringer als keine oder L2 Regularisierung auf den selben Daten \cite{NG}. Ridge Regression hingegen glättet die Koeffizienten, sodass einzelne Features nicht übermäßig hoch gewichtet werden. Dies erhöht häfig die Generalisierbarkeit des gelernten Modells.\\
-Die folgenden Graphen wurden mit dem "`Internet Advertisements Data Set"' von \cite{DUA2019} trainiert.
+Die folgenden Graphen wurden mit dem "`Internet Advertisements Data Set"' von \cite{DUA2019} trainiert.\\
 \begin{figure}[ht]
 \centering
 	\begin{minipage}[b]{.4\linewidth}
@@ -229,5 +229,6 @@ Die folgenden Graphen wurden mit dem "`Internet Advertisements Data Set"' von \c
 \centering
 \includegraphics[scale=.8]{bilder/no_reg}
 \caption{Logistische Regression ohne Regularisierung}
-\end{figure}
+\end{figure}\\
+Weitere Tests auf dem MNIST Datensatz \cite{MNIST} werden in Kapitel 5 behandelt.
 

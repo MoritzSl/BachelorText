@@ -98,6 +98,7 @@ Die MNIST Datenbank ist eine Sammlung handgeschriebener Ziffern, komprimiert, ze
 \end{figure}\\
 Die Auslastung des FPGA für diese Implementierung beträgt in etwa 50\% (siehe Abbildung 4.3), sodass auch 16 Perceptrons parallel geschaltet werden können. Für die bildliche Darstellung in dieser Arbeit wäre dies jedoch ein zu großes Diagramm. Für Datensätze mit mehr Features als MNIST erhöht sich zudem die Auslastung, da jedes Perceptron zwei Koeffizientenvektoren und einen Zwischenpuffer mit einer Länge gleich der Anzahl der Features im Speicher haben muss. Daher können für diese Datensätze keine 16 oder sogar weniger als 8 Perceptrons in das Design eingefügt werden.
 %TEsten ob das funktioniert %
+
  \begin{figure}[ht]
 \centering
 \includegraphics[scale=0.7]{bilder/blockdesign}

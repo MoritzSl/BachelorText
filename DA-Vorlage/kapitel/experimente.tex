@@ -157,4 +157,65 @@ I/O & 5 & 400 & 1.25\%\\
 
 Durch diese doch deutlich abweichenden Werte gelingt es mit Gleitkommazahlen 24 Perceptrons auf dem FPGA parallel laufen zu lassen.
 Der eventuelle Zeitverlust durch die größeren Zahlen wird hierdurch ausgeglichen. \\ 
-Auch auf dem Hostrechner laufen die Programme unter Gleitkommazahlen schneller und flüssiger als mit Festkommawerten. Eine mögliche Erklärung dafür ist, dass die Werte aus den Datensets in Gleitkommazahlen vorliegen und erst in Festkommazahlen umgerechnet werden müssen. Auch die Einstellungen $AP\_SAT\_SYM$ und $AP\_RND\_CONV$, obgleich sie wichtig für die Funktionalität auf dem FPGA sind, brauchen bei jeder Belegung und Berechnung Rechenzeit um die Direktiven auf die Zahl anzuwenden. Zusätzlich ist es auf dem FPGA bei größeren Batchgrößen die Berechnung der Summe der Kostenfunktionen in Gleitkommazahlen durchzuführen, wodurch eine weitere Umrechnung nötig ist. Beispielweise ist bei einer Batchgröße von 60 der maximale Wert, den ein Hilfskoeffizient annehmen kann auch 60 und damit größer als das Maximum von \textit{ap\_fixed(3, 16)}. Es bleibt also nur die Wahl zwischen dem Umrechnen in Gleitkommazahlen zum aufaddieren der Hilfskoeffizienten oder dem Dividieren der der Hilfskoeffizienten bei jeder Berechnung durch die Batchgröße. Auch die Zweite Möglichkeit kann dazu führen dass der Wert nicht mehr korrekt dargestellt werden kann und zu 0 gerundet wird. 
+Auch auf dem Hostrechner laufen die Programme unter Gleitkommazahlen schneller und flüssiger als mit Festkommawerten. Eine mögliche Erklärung dafür ist, dass die Werte aus den Datensets in Gleitkommazahlen vorliegen und erst in Festkommazahlen umgerechnet werden müssen. Auch die Einstellungen $AP\_SAT\_SYM$ und $AP\_RND\_CONV$, obgleich sie wichtig für die Funktionalität auf dem FPGA sind, brauchen bei jeder Belegung und Berechnung Rechenzeit um die Direktiven auf die Zahl anzuwenden. Zusätzlich ist es auf dem FPGA bei größeren Batchgrößen die Berechnung der Summe der Kostenfunktionen in Gleitkommazahlen durchzuführen, wodurch eine weitere Umrechnung nötig ist. Beispielweise ist bei einer Batchgröße von 60 der maximale Wert, den ein Hilfskoeffizient annehmen kann auch 60 und damit größer als das Maximum von \textit{ap\_fixed(3, 16)}. Es bleibt also nur die Wahl zwischen dem Umrechnen in Gleitkommazahlen zum aufaddieren der Hilfskoeffizienten oder dem Dividieren der der Hilfskoeffizienten bei jeder Berechnung durch die Batchgröße. Auch die zweite Möglichkeit kann dazu führen dass der Wert nicht mehr korrekt dargestellt werden kann und zu 0 gerundet wird. 
+
+\section{Timing und Energie}
+Um die Performance der Implementierung zu erfassen wurden die verschiedenen Lese- und Schreibmethoden gemessen. Dazu wurde auf dem Hostsystem jeweils vor und nach der zu messenden Operation die Systemzeit gespeichert und subtrahiert. zusätzlich wurde die Gesamtzeit der Operationen berechnet. Um einen möglichst genauen Wert zu erhalten wurden diese Messungen für jeweils 200 oder 500 Zyklen wiederholt. Nachfolgend sind die Ergebnisse Des Zeittests:\\
+\begin{figure}[ht]
+\begin{tabularx}{\textwidth}{c|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X}
+\multirow{2}{*}{Operation, Zeit in ms} & \multicolumn{3}{>{\hsize=3\hsize}c|}{Fixkomma mit 8 Perceptrons} & \multicolumn{3}{>{\hsize=3\hsize}c}{Float mit 16 Perceptrons} \\
+\cline{2-7}
+& min & $\varnothing$ & max & min & $\varnothing$ & max \\
+ \hline
+Lesen &426.11 & 430.472 & 442.033&740.779&767.808&770.535\\
+\hline
+Training &644.675 & 647.403 & 625.012&596.129&728.134&757.502\\
+\hline
+Test schreiben &410.963 & 414.06 & 424.923&721.724&749.679&771.331\\
+\hline
+ Gesamt &1075.21 & 1078.283 & 1091.621&1339.51&1496.395&1535.616\\
+
+\end{tabularx}
+\caption{200 Wiederholungen, jeweils 1.000 Trainings- und Testzyklen pro Messung}
+\end{figure}
+\begin{figure}[ht]
+\begin{tabularx}{\textwidth}{c|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X}
+\multirow{2}{*}{Operation, Zeit in s} & \multicolumn{3}{>{\hsize=3\hsize}c|}{Fixkomma mit 8 Perceptrons} & \multicolumn{3}{>{\hsize=3\hsize}c}{Float mit 16 Perceptrons} \\
+\cline{2-7}
+& min & $\varnothing$ & max & min & $\varnothing$ & max \\
+ \hline
+Lesen &3.98 & 4.16 & 4.21&7.49&7.6&7.67\\
+\hline
+Training &6.44 & 6.44 & 6.45&6.98&7.34&7.42\\
+\hline
+Test schreiben &3.97 & 4.14 & 4.19&7.48&7.58&7.65\\
+\hline
+ Gesamt &10.42 & 10.6 & 10.65&14.6&14.94&15.1\\
+
+\end{tabularx}
+\caption{500 Wiederholungen, jeweils 10.000 Trainings- und Testzyklen pro Messung}
+\end{figure}\\
+Aus den Daten lässt sich schließen dass die Implementierung mit der doppelten Anzahl an Perceptrons und Bits im Zahlenformat keine so großen Auswirkungen auf die gemessenen Zeiten hat. Trotz Vervierfachung der zu schreibenden und lesenden Bits erhöht sich die Zeit im ersten Test für das Lesen nur um 78,3\%, für das Training um 12,5\%, für das Testen um 81\% und für die Gesamtzeit um 38,8\%. Die Gesamtzeit pro Perceptron würde für die Festkommazahl 134.75 ms und für die Gleitkommazahl 93.525 ms betragen. Diese Werte gelten für das Trainieren und Testen von jeweils 1000 Variablen mit 784 Features. Interessanterweise ist bei der Festkommazahl das Testen am schnellsten, bei der Gleitkommazahl jedoch das Training. Dies lässt sich auf die zusätzlichen Umrechnungen der Werte auf dem FPGA bei der Festkommazahl zurückführen.\\
+Lässt man die Perceptrons auf dem Hostrechner selbst trainieren, so erhält man folgende Werte:\\
+\begin{figure}[ht]
+\centering
+\begin{tabularx}{.6\textwidth}{c|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X}
+\multirow{2}{*}{Operation, Zeit in s} & \multicolumn{3}{>{\hsize=3\hsize}c}{1.000 mal Training und Tests} \\
+\cline{2-4}
+& min & $\varnothing$ & max\\
+\hline
+Training &43.34 & 43.43 & 43.76\\
+\hline
+Test schreiben &8.75 & 8.77 & 8.87\\
+\hline
+ Gesamt &52.09 & 52.21 & 52.56\\
+
+\end{tabularx}
+\caption{500 Wiederholungen für Perceptrons auf dem Hostsystem, 8 Perceptrons}
+\end{figure}\\
+Die Zeiten des Hosts zeigen, wie gut die Implementierungen auf dem FPGA gegenüber einer direkten Programmierung abschneiden. Ganze 48.6 mal mehr Zeit braucht der Hostrechner gegenüber der Fixpunkt Implementierung und 34.8 mal mehr als die der Gleitkommazahl. An dieser Stelle ist zu erwähnen, dass der Prozess auf dem Hostrechner weder parallelisiert noch optimiert wurde und somit das Multithreading moderner Prozessoren nicht ausgenutzt wurde. Es wurde lediglich naiv der Code für die Perceptrons in Reihe geschaltet und entsprechend häufig der Anzahl der Perceptrons auf dem FPGA ausgeführt.\\\\
+Auch der Energieverbrauch der Implementierungen ist überschaubar. So hat die Implementierung mit 8 Perceptrons einen Verbrauch von 1.795 Watt und die Implementierung mit 16 Perceptrons und Gleitkommazahl 2.338 Watt.
+Zum Vergleich: Der Hostrechner verbraucht als Verlustleistung schon 130 Watt \cite{INTEL}. Eine GPU würde unter Last bis zu 538 Watt verbrauchen \cite{GPU}.
+
+\section{Probleme}
+Bei der Implementierung der Hostanwendung gab es einige Hürden zu überwinden. Vor allem das Timing und die Abstimmung mit dem FPGA sind essentiell für die Reibungslose Kommunikation beider Systeme. Bei Implementierungen von Fixkommazahlen mit mehr als 8 Perceptrons konnte der Hostprozess die Daten einiger Perceptrons nicht mehr auslesen. Erst das Umstellen auf einen linearen Programmverlauf führte zu einer Verbesserung der Kommunikation, zu Ungunsten der Laufzeitdauer. Der Grund dieser Störungen konnte nicht ermittelt werden, es steht jedoch die Latenz der Verteiler- und Sammlerklassen im Verdacht. Eine Aufteilung der Klassen und die damit verbundene Verminderung der Latenzzeiten brachte jedoch nicht den gewünschten Erfolg, sodass auf eine Gleitkommazahl-Implementierung ausgewichen werden musste.

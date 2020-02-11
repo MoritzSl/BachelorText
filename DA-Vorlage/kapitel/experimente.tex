@@ -75,4 +75,86 @@ In der zweiten Zeile (Abbildung 5.7, 5.8, 5.9) sind die Koeffizienten normalisie
   		\caption{L2 normiert}
   	\end{minipage}
 \end{figure}
-3
+Die MNIST Daten sind so auf den angezeigten Bildausschnitt normiert, das der Schwerpunkt der Pixel mit einer gezeichneten Linie zur Bildmitte hin verschoben ist. Die "`3"' zu Beispiel, wie in den Graphiken oben zu sehen, ist nach oben links im Bild verzogen, die "`9"' hingegen nach unten links.
+Da sich nicht alle Ziffern perfekt überlappen gibt es für die L1 Regularisierung sehr wenige Koeffizienten, die auf 0 gesetzt werden können. Demnach hat diese Regularisierungsmethode nur mit kleiner Gewichtung eine positive Auswirkung auf das Endergebnis. In den folgenden Graphiken zeigt sich deutlich, dass eine Ausdünnung der Koeffizienten schon bei sehr kleine Hyperparametern C zu schlechteren Vorhersagen führt.
+Dennoch ist die Wahl dieser Methode, sofern C richtig gewählt wird, durchaus berechtigt, denn zum einen liegt eine kleine Verbesserung vor, zum anderen können zumindest die für die Entscheidung ausschlaggebenden Features isoliert werden.\newpage
+\begin{figure}[ht]
+\centering
+	\begin{minipage}[b]{.45\linewidth}
+  		\includegraphics[scale=0.4]{bilder/pareto_l1_MNIST}
+  		\caption{L1 nach C mit Fixkomma}
+  	\end{minipage}
+  	\hspace{.05\linewidth}% Abstand zwischen Bilder
+  	\begin{minipage}[b]{.45\linewidth}
+  		\includegraphics[scale=0.4]{bilder/pareto_l1_float_single}
+		\caption{L1 nach C mit Float}
+	\end{minipage}
+	\hspace{.05\linewidth}% Abstand zwischen Bilder
+\end{figure}
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=.7]{bilder/pareto_l1_float}
+\caption{L1 Regularisierung mit Float}
+\end{figure}
+Im Gegensatz dazu kann die L2 Regularisierung die Ergebnisse mit etwas größerem Hyperparameter C geringfügig verbessern, sodass bei der Wahl der Regularisierungsmethode auf Ridge Regression zurückgegriffen werden sollte. Sowohl die Vorhersagen bei der L1- als auch bei der L2 Regularisierung klassifizieren mehr Variablen mit Bezeichnung 0 korrekt als negativ, aber es werden auch mehr Variablen mit Bezeichnung 1 fälschlicherweise als negativ eingeordnet. 
+
+\begin{figure}[ht]
+\centering
+	\begin{minipage}[b]{.45\linewidth}
+  		\includegraphics[scale=0.4]{bilder/pareto_l2_MNIST}
+  		\caption{L2 nach C mit Fixkomma}
+  	\end{minipage}
+  	\hspace{.05\linewidth}% Abstand zwischen Bilder
+  	\begin{minipage}[b]{.45\linewidth}
+  		\includegraphics[scale=0.4]{bilder/pareto_l2_float_single}
+		\caption{L2 nach C mit Float}
+	\end{minipage}
+	\hspace{.05\linewidth}% Abstand zwischen Bilder
+\end{figure}
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=.7]{bilder/pareto_l2_float}
+\caption{L2 Regularisierung mit Float}
+\end{figure}\newpage
+
+\section{Festkomma- und Gleitkommazahl}
+Die Wahl einer Festkommazahl im Gegensatz zu einer Gleitkommazahl liegt durch deren Eigenschaften von Beginn an nahe. Berechnungen mit Fixkommazahlen sind ressourcenschonender und schneller als Gleitkommaberechnungen, bei denen die Anzahl Bits für die Vor- und Nachkommastelle mit jeder Zahl variieren können. zudem können auf der verwendeten 32-Bit Schnittstelle von Xillybus zwei Fixkommazahlen mit der Länge von 16 oder weniger Bits gleichzeitig übertragen werden. Dies sollte die Übertragungszeit für die Daten an den FPGA halbieren. \\
+Überraschenderweise sind aber die Fixkommazahlen auf dem FPGA deutlich Ressourcenabhängiger als die Gleitkommazahlen. eine Belegung des FPGA mit 16 Perceptrons erzielt für Fixkomma- und Gleitkommazahlen jeweils folgende Auslastungen:\\\\
+Fixkommazahl:\\\\
+
+\begin{tabularx}{.6\textwidth}{p{0.16\textwidth}|r|r|r}
+Bauteil & Benutzt & Gesamt & Auslastung \\
+\hline
+LUT & 120478 & 133800 & 90.04\%\\
+\hline
+LUTRAM & 685 & 46200 & 1.48\%\\
+\hline
+FF & 757423 & 267600 & 28.18\%\\
+\hline
+BRAM & 37 & 365 & 10.14\%\\
+\hline
+DSP & 400 & 740 & 54.05\%\\
+\hline
+I/O & 5 & 400 & 1.25\%\\
+\end{tabularx}\\\\
+Gleitkommazahl:\\\\
+
+\begin{tabularx}{.6\textwidth}{p{0.16\textwidth}|r|r|r}
+Bauteil & Benutzt & Gesamt & Auslastung \\
+\hline
+LUT & 82816 & 133800 & 61.90\%\\
+\hline
+LUTRAM & 1586 & 46200 & 3.43\%\\
+\hline
+FF & 81956 & 267600 & 30.63\%\\
+\hline
+BRAM & 61 & 365 & 16.67\%\\
+\hline
+DSP & 400 & 740 & 54.05\%\\
+\hline
+I/O & 5 & 400 & 1.25\%\\
+\end{tabularx}\\\\
+
+Durch diese doch deutlich abweichenden Werte gelingt es mit Gleitkommazahlen 24 Perceptrons auf dem FPGA parallel laufen zu lassen.
+Der eventuelle Zeitverlust durch die größeren Zahlen wird hierdurch ausgeglichen. \\ 
+Auch auf dem Hostrechner laufen die Programme unter Gleitkommazahlen schneller und flüssiger als mit Festkommawerten. Eine mögliche Erklärung dafür ist, dass die Werte aus den Datensets in Gleitkommazahlen vorliegen und erst in Festkommazahlen umgerechnet werden müssen. Auch die Einstellungen $AP\_SAT\_SYM$ und $AP\_RND\_CONV$, obgleich sie wichtig für die Funktionalität auf dem FPGA sind, brauchen bei jeder Belegung und Berechnung Rechenzeit um die Direktiven auf die Zahl anzuwenden. Zusätzlich ist es auf dem FPGA bei größeren Batchgrößen die Berechnung der Summe der Kostenfunktionen in Gleitkommazahlen durchzuführen, wodurch eine weitere Umrechnung nötig ist. Beispielweise ist bei einer Batchgröße von 60 der maximale Wert, den ein Hilfskoeffizient annehmen kann auch 60 und damit größer als das Maximum von \textit{ap\_fixed(3, 16)}. Es bleibt also nur die Wahl zwischen dem Umrechnen in Gleitkommazahlen zum aufaddieren der Hilfskoeffizienten oder dem Dividieren der der Hilfskoeffizienten bei jeder Berechnung durch die Batchgröße. Auch die Zweite Möglichkeit kann dazu führen dass der Wert nicht mehr korrekt dargestellt werden kann und zu 0 gerundet wird. 

@@ -102,12 +102,195 @@ Die Auslastung für 16 Perceptrons unter MNIST beträgt 90\% der LUT und ist in 
 \centering
 \includegraphics[scale=0.95]{bilder/auslastung2}
 \caption{Auslastung auf dem FPGA mit 16-Bit Fixkommazahl und 16 Perceptrons}
-\end{figure}\\
-Für Datensätze mit mehr Features als MNIST erhöht sich zudem die Auslastung, da jedes Perceptron zwei Koeffizientenvektoren und einen Zwischenpuffer mit einer Länge gleich der Anzahl der Features im Speicher haben muss. Daher können für diese Datensätze keine 16 oder sogar weniger als 8 Perceptrons in das Design eingefügt werden.
-%TEsten ob das funktioniert %
-
- \begin{figure}[ht]
+\end{figure}\\ 
+\begin{figure}
 \centering
 \includegraphics[scale=0.7]{bilder/blockdesign}
 \caption{Das Blockdesign auf dem FPGA}
+\end{figure}\newpage
+Für Datensätze mit mehr Features als MNIST erhöht sich zudem die Auslastung, da jedes Perceptron zwei Koeffizientenvektoren und einen Zwischenpuffer mit einer Länge gleich der Anzahl der Features im Speicher haben muss. Daher können für diese Datensätze keine 16 oder sogar weniger als 8 Perceptrons in das Design eingefügt werden.
+Bei mehr als 16 Perceptrons treten zudem einige Probleme bezüglich des Timings auf, welche in Kapitel 5 näher behandelt werden.
+
+\section{Implementierung der Hostanwendung}
+Durch die Nutzung der PCIe-Schnittstelle mit Xillybus wie in \cite{DILL} ausgeführt muss die Hostanwendung einiges mehr leisten als nur den Datenaustausch zwischen Hostrechner und FPGA zu verwalten. Sie dient der Aufbereitung der Daten, der Koordination mit dem FPGA und der Auswertung der Ergebnisse. Es werden zunächst die Eingabedaten in den Speicher geladen und auf Werte zwischen 0 und 1 normalisiert. Dann werden die Werte in das angegebene Zahlenformat konvertiert. Je nach Datensatz ist dies ein nicht unerheblicher Zeitaufwand, der jedoch unvermeidlich ist.\\
+Um den FPGA nun auf das Lernen eines neuen Modells vorzubereiten können jetzt die Umgebungsvariablen gesetzt werden. Jedes Perceptron ist separat konfigurierbar, womit dem Nutzer eine Vielzahl von Testmöglichkeiten eröffnet werden. Regulierbar sind der Hyperparameter $C$, die Lernrate des Modells, die Batchgröße für den Gradientenabstieg und die Regularisierungsmethode. Alle diese Werte werden in das gewählte Zahlenformat konvertiert, sodass zum Beispiel eine Batchgröße von 5 im Zahlenformat $ap\_fixed<16,3>$ (16 Bit Fixkommazahl mit 3 Vorkommabits, davon ein Vorzeichenbit) nicht angegeben werden kann. für diesen Fall kann die Batchgröße auf 0 gesetzt und das Batchupdate nach der gewünschten Trainingsmenge manuell vom Hostrechner aus initiiert werden. Die hohe Konfigurierbarkeit hat den Vorteil, dass viele verschiedene Einstellungen auf dem FPGA getestet werden können, ohne dass dieser neu programmiert werden muss. Das Erstellen von Pareto-Fronten ist also gut umzusetzen.\\
+Auch die Koeffizienten müssen durch das Hostprogramm vorbelegt werden. Das kann durch einen Nullvektor oder durch Normalverteilte Zufallszahlen geschehen, bietet aber auch die Möglichkeit bereits trainierte Koeffizienten zu verwenden. Durch das Einstellen der Laufvariable auf 0 kann hiermit ein Trainingsvorgang übersprungen werden.\\
+Die Implementierung mit dem Fokus PCIe Schnittstelle erfordert es, dass für jede Operation auf dem FPGA zunächst alle Features einer Variable übertragen werden müssen. Jedes Perceptron auf dem FPGA besitzt einen Pufferspeicher für genau eine Variable, sodass mit dem Übertragen eines Datenpunktes alle 8(16) Perceptrons initialisiert werden können. Dieser Puffer wird sowohl für die Trainings- als auch für die Testdaten verwendet, um möglichst wenig von dem stark begrenzten Speicherplatz des FPGA zu verwenden.
+Aufgrund technisch bedingter Schwierigkeiten (in Kapitel 5 werden diese behandelt) Werden die Trainings- und die Testmethode in verschiedenen Prozeduren behandelt. 
+\subsection{Training}
+Das Trainingsprogramm hat die Aufgabe das FPGA auf den Start eines neuen Trainingszyklus' vorzubereiten und diesen dann durchzuführen. Die wichtigsten Programmteile werden in folgendem Codeteil vorgestellt:
+\begin{figure}[ht]
+\centering
+\begin{lstlisting}
+/*Konfiguriere den FPGA mit Daten aus der Config-Datei*/
+write(fc, conf, sizeof(char));
+write(fc, NULL,0);
+	for(int i =0; i< PERCEPTRONS; i++){
+		write(fdw, &hyper[i], sizeof(DATA_TYPE));
+		write(fdw, &lrate[i], sizeof(DATA_TYPE));
+		write(fdw, &batch[i], sizeof(DATA_TYPE));
+		write(fdw, &modus[i], sizeof(DATA_TYPE));
+		write(fdw, NULL,0);
+	}
+/*Normalverteilte Zufallszahlen zur Koeffizienteninitialisierung*/
+	for(int i=0; i<((FEATURE_COUNT+1)); i++){
+		DATA_TYPE t =nd_random.dev();
+		rc = write(fdw, &t, sizeof(DATA_TYPE));
+		write(fdw, NULL,0);
+	}
+\end{lstlisting}
+\caption{Konfiguration des FPGA}
+\end{figure}\\
+Die Filestreams \textit{fc} und \textit{fdw} sind die Outputstreams in die Devicefiles der Xillybus-Schnittstelle. Eine Schreiboperation mit \textit{NULL} und einer Länge von 0 (\textit{write(fc, NULL, 0)}) sorgt hier für das leeren der Internen Puffer, sodass die geschriebenen Daten dem FPGA zur Verfügung stehen. Die Koeffizienten werden durch \textit{nd\_random.dev()} normalverteilte Pseudozufallszahlen initialisiert, da man davon ausgeht dass die gelernten Koeffizienten später auch normalverteilt sind.\\
+Der Trainingsvorgang selbst besteht aus einer Doppelschleife über die Epochen und die einzelnen Zyklen. In jeder Epoche werden alle Zyklen exakt gleich durchgeführt. Dies ist über die Deaktivierung der Methode \textit{srand(seed)} abzuschalten, sodass in jeder Epoche ein völlig anderer Trainingszyklus (mit neuen und anders sortierten Daten) ablaufen kann.\\
+\begin{figure}
+\centering
+\begin{lstlisting}
+/*Starte Epochen*/
+for(int lauf =0; lauf<max_runs;lauf++){
+/*Zufallsgenerator neu seeden*/
+	srand(seed);
+/*Starte Trainingszyklus*/
+	for(int cycle=0; cycle < max_runs; cycle++){
+/*Zufaellige Position in der Trainingsmenge bestimmen*/
+		int idx = rand() % number_of_labels_train;
+		int idx_data= idx*FEATURE_COUNT;
+		rc = write(fc, conf+2, sizeof(char));
+		write(fc, NULL, 0);
+
+/*Alle Features und das Label versenden*/
+		for(int i=0;i<FEATURE_COUNT;i++){
+			DATA_TYPE st = train_set[idx_data+i];
+			rc = write(fdw, &st, sizeof(DATA_TYPE));
+			write(fdw, NULL,0);
+		}
+		DATA_TYPE st = train_label[idx];
+		rc = write(fdw, &st, sizeof(DATA_TYPE));
+		write(fdw, NULL,0);
+	    if (rc <= 0) {
+	    	perror("write() failed labels");
+	        exit(1);
+	    }
+	}
+/*Batch Updaten wenn keine Groesse angegeben ist*/
+	if(batch_is_zero){
+		for(int i=0; i< PERCEPTRONS; i++){
+			if(batch[i] == zero){
+				rc = write(fc, conf+1, sizeof(char));
+				rc = write(fc, perceptron_names+i, sizeof(char));
+				write(fc, NULL, 0);
+			}
+		}
+	}
+}
+\end{lstlisting}
+\caption{Durchführen der Trainingszyklen}
+\end{figure}\newpage
+
+\subsection{Vorhersagen}
+Sobald das Modell auf dem FPGA trainiert ist kann mit den Voraussagetests begonnen werden. Es werden dafür alle Variablenpuffer der Perceptrons mit der zu testenden Variable gefüllt. Nun muss für jedes Perceptron der Aufruf zum Vorhersagen erfolgen. Die Lese- und Schreiboperationen können in verschiedenen Threads ausgeführt werden um Zeit zu sparen. Dabei ist es nötig zu wissen in welcher Reihenfolge die Perceptrons ihre Ausgaben an den Hostrechner senden. Durch das einzelne Anstoßen der Vorhersagefunktion ist dies gewährleistet. Zudem ist \textit{read()} eine blockierende Funktion, sodass keine Daten übergangen werden.\\
+Die ausgelesenen Ergebnisse werden in einer Datei abgelegt, ohne diese vorher zu leeren. \\
+\begin{figure}[ht]
+\centering
+\begin{lstlisting}
+/*Gemeinsamen Speicher reservieren*/
+DATA_TYPE *right = (DATA_TYPE *)mmap(NULL, maxruns*sizeof(DATA_TYPE), protection, visibility, -1, 0);
+  DATA_TYPE *d_pred = (DATA_TYPE *)mmap(NULL, PERCEPTRONS*maxruns*sizeof(DATA_TYPE),protection, visibility, -1, 0);
+/*Elternprozess starten*/
+  pid_t pid = fork();
+  if(pid){
+    for(int i =0; i<maxruns; i++){
+      int idx_p=i+offset;
+      if(offset<0){
+        idx_p= rand() % (number_of_labels_test);
+      }
+      right[i] = test_label[idx_p];
+      write(fc, &load, sizeof(char));
+      write(fc, NULL, 0);
+      for(int j=0; j<MAX_FEATURE_COUNT;j=j+1){
+        int idx = (idx_p*MAX_FEATURE_COUNT+j);
+        DATA_TYPE st = test_set[idx];
+        write(fdw, &st, sizeof(DATA_TYPE));
+        write(fdw, NULL, 0);
+      }
+      for(int j=0;j<PERCEPTRONS; j++){
+        write(fc, &test , sizeof(char));
+        write(fc, ar+j, sizeof(char));
+        write(fc, NULL, 0);
+      }
+    }
+    wait(NULL);
+  }
+\end{lstlisting}
+\caption{Elternprozess der Trainingsmethode}
+\end{figure}\\
+\begin{figure}[ht]
+\centering
+\begin{lstlisting}
+...
+  if(pid){
+  	...
+  } 
+  else{
+    for(int i =0;i<maxruns;i++){
+      for(int j=0;j<PERCEPTRONS;j++){
+        read(fdr_c, conf, sizeof(char));
+        read(fdr_d, d_pred+(j*maxruns+i) ,sizeof(DATA_TYPE));
+      }
+    }
+    _exit(0);
+  }
+\end{lstlisting}
+\caption{Kindprozess der Trainingsmethode}
+\end{figure}\\
+Zu den extrahierten Ergebnissen gehören die Trefferquoten der Vorhersagen über die eingegebenen Daten, die richtigerweise richtig klassifizierten ("`true positive"'), die fälschlicherweise als richtig bezeichneten  ("`false positiv"'), die richtigerweise als falsch klassifizierten  ("`true negative"') und die fälschlicherweise als falsch deklarierten ("`false negativ"') Daten.\\
+\subsection{Koeffizienten}
+Wenn ein Modell soweit trainiert worden ist dass es zufriedenstellende Vorhersagen treffen kann, dann speichert man die Koeffizienten für die weitere Verwendung oder zur Analyse ab. Auf normalen Rechnern kann man sie in Dateien überspielen lassen oder in die Ausgabe leiten. Von einem FPGA
+müssen die Koeffizienten jedoch erst extrahiert werden um weiter mit ihnen arbeiten zu können. Die Implementierung bietet dazu eine Methode an, die jederzeit den Koeffizientenvektor des gewünschten Perceptrons ausgeben kann. Auch nach dem Schließen der Systemdateien von Xillybus, und damit dem löschen der Puffer bleibt der letzte Zustand des FPGA auf diesem erhalten. Sogar nach einem Neustart des Hostrechners sind die Koeffizienten noch im jeweiligen Perceptron hinterlegt. Demnach kann das Modell beliebig weiter bearbeitet oder zum testen und vorhersagen von Daten benutzt werden, bis es sich durch seine Performance für eine Extraktion qualifiziert.\\
+Der Code des Extraktors ist hier aufgeführt: 
+
+\begin{figure}[ht]
+\centering
+\begin{lstlisting}
+char *ct_coef = (char*)malloc(sizeof(char)*PERCEPTRONS*(FEATURE_COUNT+1));
+DATA_TYPE *dt_coef = (DATA_TYPE*)malloc(sizeof(DATA_TYPE)*(FEATURE_COUNT+1)*PERCEPTRONS);
+
+int s_coef = (FEATURE_COUNT+1);
+for(int j=0; j<PERCEPTRONS;j++){
+  write(fc, &conf, sizeof(char));
+  write(fc, perceptron_names+j, sizeof(char));
+  write(fc, NULL, 0);
+  for(int i=0;i<s_coef;i++){
+    read(fdr_c, &config, sizeof(char));
+    ct_coef[j*s_coef+i]=config;
+    read(fdr_d, &fbuf ,sizeof(DATA_TYPE));
+    dt_coef[j*s_coef+i] = fbuf;
+  }
+}
+printf("open datafile");
+ofstream dw ("coeff.txt", std::ofstream::trunc);
+if (dw.is_open()){
+  for(int j=0;j<PERCEPTRONS;j++){
+    bool first = true;
+    int count_c=0;
+    for(int i=0;i<(MAX_FEATURE_COUNT+1)*PERCEPTRONS;i++){
+      if(ct_coef[i] == perceptron_names[j]){
+        if(first){
+          dw << dt_coef[i] << "\n";
+          first=false;
+        }
+        else{
+          count_c++;
+          if(count_c % 28 == 0 )
+            dw << dt_coef[i] << "\n";
+          else
+            dw << dt_coef[i] << ",";
+        }
+      }
+    }
+  }
+  dw.close();
+}
+\end{lstlisting}
+\caption{Extraktion der Koeffizienten}
 \end{figure}

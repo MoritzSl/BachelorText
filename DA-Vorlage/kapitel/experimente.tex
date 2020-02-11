@@ -1,8 +1,8 @@
 \chapter{Experimente und Ergebnisse}
 In diesem Kapitel werden verschiedene Experimente mit dem FPGA durchgeführt. Zunächst wird gemessen, Wie viel Zeit pro trainiertem Perzeptron für das Training und die Voraussagen auf dem FPGA und einer Implementierung auf dem Hostsystem aufgewendet werden muss. Hierbei wird das Programm auf dem Hostsystem nicht parallelisiert. 
 Dann werden beispielhaft Trainingsvorgänge mit verschiedenen Datensätzen durchgeführt, um die Genauigkeit der Vorhersagen zu überprüfen und Ergebnisse der Testvorgänge zu präsentieren.\\
-Es werden für die Experimente die Datensätze MNIST \cite{MNIST}, und verwendet.\\
-Die Features $\vec f$ des jeweiligen Datensatzes wurden normalisiert, so dass $\forall f \in \vec f\text{ . } f \in [0,1]$. 
+Es wird für die Experimente der Datensatz MNIST \cite{MNIST} verwendet.\\
+Die Features $\vec f$ des Datensatzes wurden normalisiert, sodass $\forall f \in \vec f\text{ . } f \in [0,1]$. 
 \section{Regularisierung}
 Mit dem MNIST Datensatz wurden verschiedene Testzyklen zur Regularisierung durchgeführt. Für die Ergebnisse ist der Datentyp, soweit nicht anders vermerkt, auf eine Fixkommazahl mit einem Vorzeichen-, 4 Vorkommastellen- und 11 Nachkommastellenbits eingestellt. Ein Trainingsdurchlauf mit 200 Variablen und 100 Wiederholungen führte zu folgenden Ergebnissen: \\\\
 \begin{tabularx}{\textwidth}{p{0.16\textwidth}|r|r|r|r|r}

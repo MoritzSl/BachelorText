@@ -1,5 +1,5 @@
 \chapter{Logistische Regression}
-Dieses Kapitel befasst sich mit der Logistischen Regression. Zunächst wird die Definition und Funktion der Logistischen Regression erklärt. Danach wird die Geschichte und Entwicklung der Methode erörtert. Des weiteren gibt es eine Vertiefung der verschiedenen Regularisierungsmethoden und zum Abschluss die Grenzen der Funktion sowie einen Ausblick auf verwandte Algorithmen.
+Dieses Kapitel befasst sich mit der Logistischen Regression. Zunächst wird die Definition und Funktion der Logistischen Regression erklärt. Danach wird die Geschichte und Entwicklung der Methode erörtert. Des weiteren gibt es eine Vertiefung der verschiedenen Regularisierungsmethoden und zum Abschluss die Grenzen der Funktion sowie einen Ausblick auf verwandte Algorithmen. Die hier 
 \section{Definition und Funktion}
 Die logistische Regression ist ein statistisches Analyseverfahren, bei dem es darum geht, eine Beziehung zwischen einer abhängigen und mehrerer unabhängiger Variablen zu modellieren und wird auch als binäres Logit-Modell bezeichnet. Sie gehört zur Klasse der strukturen-prüfenden Verfahren und bildet eine Variation der Regressionsanalyse \cite{BECK}.
 die Art der abhängigen Variable, bezeichnet mit Y, ist als kategoriale Variable klassifizierbar \cite{ROHR}. Die Ausprägungen der der abhängigen Variablen repräsentieren die verschiedenen Alternativen, in unserem binären (oder auch dichotomen) Fall ist "`trifft zu"' und "`trifft nicht zu"'. Sie werden deshalb mit den Kategorien 0 beziehungsweise 1 beschrieben, sodass die Vorhersage des Modells die Wahrscheinlichkeit beschreibt, mit der die abhängige Variable den Wert 1 annimmt, formal $P(Y_i=1)$ \cite{BECK}.
@@ -78,8 +78,9 @@ Die Kostenfunktion über alle Eingaben lautet damit \cite{HER}:
 \begin{displaymath}
 J(\beta)=\dfrac{1}{n} \cdot \sum_{i=1}^n cost(\pi(\vec x_i), y_i) = \dfrac{1}{n} \cdot \sum_{i=1}^n y_i \cdot -\log(\pi(\vec x_i)) + (1-y_i) \cdot -\log(1-\pi(\vec x_i))
 \end{displaymath}
+Die hier verwendete LogLoss-Funktion ist per Definition die Lossfunktion für die logistische Regression. Im Allgemeinen ist die Wahl der Lossfunktion dem Nutzer überlassen, solange sie differenzierbar ist. Das Grundgerüst für das Lernen über das Gradientenabstiegsverfahren ist im nächsten Abschnitt ersichtlich. Nur durch die Kombination von LogLoss, logistischer Funktion und einer linearen Funktion wird dieses Verfahren als logistische Regression bezeichnet. Die Kombination der "`Methode der kleinsten Quadrate"' und der linearen Funktion wäre dann eine lineare Regression.
 \subsection{Gradientenabstiegsverfahren}
-Das Gradientenabstiegsverfahren (Stochastic Gradient Descent, kurz SGD) ist ein Lernverfahren für Modelle mit nichtlinearen Parametern im Modellausgang. Es wird in statischen neuronalen Netzen dafür verwendet mittels eines Algorithmus' die Koeffizienten zu adaptieren. Ziel des Lernverfahrens ist es die Koeffizienten so anzupassen, dass die Abweichung  zwischen dem $y_i$ Wert der eingegebenen Variable und der Ausgabe $\pi(\vec x_i)$ möglichst gering ist. Diese Abweichung bezeichnet man als Ausgangsfehler \cite{IV}:
+Das stochastische Gradientenabstiegsverfahren (Stochastic Gradient Descent, kurz SGD) ist ein Lernverfahren für Modelle mit nichtlinearen Parametern im Modellausgang. Es wird in statischen neuronalen Netzen dafür verwendet mittels eines Algorithmus' die Koeffizienten zu adaptieren. Ziel des Lernverfahrens ist es die Koeffizienten so anzupassen, dass die Abweichung  zwischen dem $y_i$ Wert der eingegebenen Variable und der Ausgabe $\pi(\vec x_i)$ möglichst gering ist. Diese Abweichung bezeichnet man als Ausgangsfehler \cite{IV}:
 \begin{displaymath}
 e_{\beta}(\vec x_i , y_i)=y_i-\pi(\vec x_i)
 \end{displaymath}
@@ -105,7 +106,7 @@ Die einzelnen Abstiegsverfahren, wie zum Beispiel das Newton-, das Gradienten- o
 \centering
 \includegraphics[scale=1.7]{bilder/SGD}
 \caption{Beispielhafter Verlauf des Algorithmus im zweidimensionalen Fall, Grafik aus \cite{PAPA}}
-\end{figure}\newpage
+\end{figure}\\
 Voraussetzung für die Abstiegsrichtung ist es, dass für ein genügend kleines $0 < \eta^{(l)} < \tilde{\eta}^{(l)}$ die Gleichung 
 \begin{displaymath}
 f_{\beta}(\vec x + \eta^{(l)} \cdot s^{(l)}) < f_{\beta}(\vec x)
@@ -211,7 +212,7 @@ Im logarithmischen Raum, mit $\mu =0$ und $2\sigma^2 = 1$ verhält dieser sich g
 \end{displaymath}
 Welcher äquivalent zu unserer Minimierungsfunktion aus 3.2.3 ist \cite{JUR}.
 \subsection{Zusammenfassung der Regularisierungsmethoden}
-Sowohl L1- als auch L2 Regularisierung haben beide ihre Vorteile. LASSO ist besonders für Feature Selection geeignet, da da dadurch viele weniger- oder unwichtige Features aussortiert (auf 0 gesetzt) werden. Für Fälle mit vielen, aber wenig relevanten Features ist Fehlklassifizierungsrate deutlich geringer als keine oder L2 Regularisierung auf den selben Daten \cite{NG}. Ridge Regression hingegen glättet die Koeffizienten, sodass einzelne Features nicht übermäßig hoch gewichtet werden. Dies erhöht häfig die Generalisierbarkeit des gelernten Modells.\\
+Sowohl L1- als auch L2 Regularisierung haben beide ihre Vorteile. LASSO ist besonders für Feature Selection geeignet, da da dadurch viele weniger- oder unwichtige Features aussortiert (auf 0 gesetzt) werden. Für Fälle mit vielen, aber wenig relevanten Features ist Fehlklassifizierungsrate deutlich geringer als keine oder L2 Regularisierung auf den selben Daten \cite{NG}. Ridge Regression hingegen glättet die Koeffizienten, sodass einzelne Features nicht übermäßig hoch gewichtet werden. Dies erhöht häfig die Generalisierbarkeit des gelernten Modells.\newpage
 Die folgenden Graphen wurden mit dem "`Internet Advertisements Data Set"' von \cite{DUA2019} trainiert.\\
 \begin{figure}[ht]
 \centering
